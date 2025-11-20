@@ -31,8 +31,8 @@ router.delete("/stock/:id", verifyToken, stockController.deleteStock);
 // pembelian
 router.get("/pembelian", verifyToken, pembelianController.getPembelian);
 router.post("/pembelian", verifyToken, pembelianController.createPembelian);
-// router.get("/pembelian/:id", verifyToken, pembelianController.findStockById);
-// router.put("/pembelian/:id", verifyToken, pembelianController.updateStock);
-// router.delete("/pembelian/:id", verifyToken, pembelianController.deleteStock);
+router.get("/pembelian/:id", verifyToken, pembelianController.findPembelianById);
+router.put("/pembelian/:id", verifyToken, pembelianController.updatePembelian);
+router.delete("/pembelian/:id", verifyToken, pembelianController.deletePembelian);
 
 module.exports = router;
