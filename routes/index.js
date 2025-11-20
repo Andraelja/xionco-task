@@ -7,6 +7,7 @@ const loginController = require("../controllers/LoginController");
 const produkController = require("../controllers/ProdukController");
 const stockController = require("../controllers/StockController");
 const pembelianController = require("../controllers/PembelianController");
+const chatbotController = require("../controllers/ChatbotController");
 
 const { validateRegister, validateLogin } = require("../utils/validators/auth");
 const { validateUser } = require('../utils/validators/user')
@@ -34,5 +35,8 @@ router.post("/pembelian", verifyToken, pembelianController.createPembelian);
 router.get("/pembelian/:id", verifyToken, pembelianController.findPembelianById);
 router.put("/pembelian/:id", verifyToken, pembelianController.updatePembelian);
 router.delete("/pembelian/:id", verifyToken, pembelianController.deletePembelian);
+
+// chatbot
+router.post("/chat", chatbotController.chat);
 
 module.exports = router;
