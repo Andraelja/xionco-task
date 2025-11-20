@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String?  @db.VarChar(255)
+  email     String   @unique(map: "email") @db.VarChar(255)
+  password  String?  @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Produk {
+  id        Int           @id @default(autoincrement())
+  nama      String?       @db.VarChar(255)
+  harga     Int
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  stockProduk StockProduk?
+  pembelian   Pembelian[]
+
+  @@map("produk")
+}
+
+model StockProduk {
+  id        Int      @id @default(autoincrement())
+  produkId  Int      @unique
+  jumlah    Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  produk Produk @relation(fields: [produkId], references: [id])
+
+  @@map("stock_produk")
+}
+
+model Pembelian {
+  id         Int      @id @default(autoincrement())
+  produkId   Int
+  jumlah     Int
+  totalHarga Int
+  status     StatusPembelian @default(berhasil)
+  createdAt  DateTime @default(now())
+
+  produk Produk @relation(fields: [produkId], references: [id])
+
+  @@map("pembelian")
+}
+
+enum StatusPembelian {
+  berhasil
+  cancel
+}
