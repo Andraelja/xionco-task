@@ -5,7 +5,7 @@ const { success, error } = require("../utils/validators/response");
 const getStock = asyncHandler(async (req, res) => {
   const stock = await prisma.stockProduk.findMany({
     include: { produk: true },
-    orderBy: { id: "asc" }
+    orderBy: { id: "asc" },
   });
 
   return success(res, "Berhasil mengambil data!", stock);
@@ -72,17 +72,19 @@ const updateStock = asyncHandler(async (req, res) => {
 const deleteStock = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const cek = await prisma.stockProduk.findUnique({
+  const existing = await prisma.stockProduk.findUnique({
     where: { id: Number(id) },
   });
 
-  if (!cek) return error(res, "Stock tidak ditemukan", 404);
+  if (!existing) {
+    return error(res, "Stok tidak ditemukan!", 404);
+  }
 
   await prisma.stockProduk.delete({
     where: { id: Number(id) },
   });
 
-  return success(res, "Berhasil menghapus stock", null);
+  return success(res, "Stok berhasil dihapus!");
 });
 
 module.exports = {

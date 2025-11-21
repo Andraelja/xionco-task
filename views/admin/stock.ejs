@@ -32,6 +32,7 @@
       >
         Add Stock
       </button>
+
       <table class="table table-striped">
         <thead>
           <tr>
@@ -100,6 +101,12 @@
                     }, ${s.jumlah})">
                       Update
                     </button>
+
+                    <button class="btn btn-danger btn-sm" onclick="deleteStock(${
+                      s.id
+                    })">
+                      Delete
+                    </button>
                 </td>
             </tr>`
             )
@@ -116,6 +123,16 @@
         await api(`/api/stock/${id}`, {
           method: "PUT",
           body: JSON.stringify({ jumlah: Number(newJumlah) }),
+        });
+
+        loadStock();
+      };
+
+      window.deleteStock = async function (id) {
+        if (!confirm("Yakin ingin menghapus stok ini?")) return;
+
+        await api(`/api/stock/${id}`, {
+          method: "DELETE",
         });
 
         loadStock();

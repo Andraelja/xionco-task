@@ -140,8 +140,12 @@
       window.deleteProduk = async function (id) {
         if (!confirm("Delete produk?")) return;
 
-        await api(`/api/produk/${id}`, { method: "DELETE" });
-        loadProduk();
+        try {
+          await api(`/api/produk/${id}`, { method: "DELETE" });
+          loadProduk();
+        } catch (err) {
+          alert(err.message);
+        }
       };
 
       loadProduk();
