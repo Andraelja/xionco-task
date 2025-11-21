@@ -14,6 +14,7 @@ const { validateUser } = require('../utils/validators/user')
 
 router.post("/register", validateRegister, registerController.register);
 router.post("/login", validateLogin, loginController.login);
+router.post("/logout", loginController.logout);
 
 // produk
 router.get("/produk", verifyToken, produkController.getProduk);

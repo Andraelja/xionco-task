@@ -58,18 +58,32 @@ const updateProduk = asyncHandler(async (req, res) => {
 const deleteProduk = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const cek = await prisma.produk.findUnique({
-    where: { id: Number(id) },
-  });
-
+  const cek = await prisma.produk.findUnique({ where: { id: Number(id) } });
   if (!cek) return error(res, "Produk tidak ditemukan", 404);
 
-  await prisma.produk.delete({
-    where: { id: Number(id) },
+  // Cek relasi StockProduk
+  const relatedStock = await prisma.stockProduk.findFirst({
+    where: { produkId: Number(id) },
   });
+
+  // Cek relasi Pembelian
+  const relatedPembelian = await prisma.pembelian.findFirst({
+    where: { produkId: Number(id) },
+  });
+
+  if (relatedStock || relatedPembelian) {
+    return error(
+      res,
+      "Produk masih dipakai di StockProduk atau Pembelian, tidak bisa dihapus",
+      400
+    );
+  }
+
+  await prisma.produk.delete({ where: { id: Number(id) } });
 
   return success(res, "Berhasil menghapus produk", null);
 });
+
 
 module.exports = {
   getProduk,

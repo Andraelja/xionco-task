@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Pembelian - XIONCO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/admin/dashboard">XIONCO Admin</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/admin/dashboard">Dashboard</a>
+                <a class="nav-link" href="/admin/produk">Produk</a>
+                <a class="nav-link" href="/admin/stock">Stock</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h1>Manage Pembelian</h1>
+        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addPembelianModal">Add Pembelian</button>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Produk</th>
+                    <th>Jumlah</th>
+                    <th>Total Harga</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="pembelianTable">
+                <!-- Pembelian data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add Pembelian Modal -->
+    <div class="modal fade" id="addPembelianModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Pembelian</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPembelianForm">
+                        <div class="mb-3">
+                            <label for="produkId" class="form-label">Produk</label>
+                            <select class="form-control" id="produkId" required>
+                                <!-- Produk options will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="jumlah" class="form-label">Jumlah</label>
+                            <input type="number" class="form-control" id="jumlah" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="totalHarga" class="form-label">Total Harga</label>
+                            <input type="number" class="form-control" id="totalHarga" readonly>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let produkList = [];
+
+        // Load produk for select
+        async function loadProduk() {
+            const response = await fetch('/api/produk');
+            produkList = await response.json();
+            const select = document.getElementById('produkId');
+            select.innerHTML = produkList.map(p => `<option value="${p.id}">${p.nama} - ${p.harga}</option>`).join('');
+        }
+
+        // Load pembelian data
+        async function loadPembelian() {
+            const response = await fetch('/api/pembelian');
+            const pembelian = await response.json();
+            const table = document.getElementById('pembelianTable');
+            table.innerHTML = pembelian.map(p => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td>${p.produk.nama}</td>
+                    <td>${p.jumlah}</td>
+                    <td>${p.totalHarga}</td>
+                    <td>${p.status}</td>
+                    <td>
+                        ${p.status === 'berhasil' ? `<button class="btn btn-danger btn-sm" onclick="cancelPembelian(${p.id})">Cancel</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Calculate total harga
+        document.getElementById('produkId').addEventListener('change', () => {
+            const produkId = document.getElementById('produkId').value;
+            const jumlah = document.getElementById('jumlah').value;
+            const produk = produkList.find(p => p.id == produkId);
+            if (produk && jumlah) {
+                document.getElementById('totalHarga').value = produk.harga * jumlah;
+            }
+        });
+
+        document.getElementById('jumlah').addEventListener('input', () => {
+            const produkId = document.getElementById('produkId').value;
+            const jumlah = document.getElementById('jumlah').value;
+            const produk = produkList.find(p => p.id == produkId);
+            if (produk && jumlah) {
+                document.getElementById('totalHarga').value = produk.harga * jumlah;
+            }
+        });
+
+        // Add pembelian
+        document.getElementById('addPembelianForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const produkId = document.getElementById('produkId').value;
+            const jumlah = document.getElementById('jumlah').value;
+            const totalHarga = document.getElementById('totalHarga').value;
+            await fetch('/api/pembelian', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ produkId: parseInt(produkId), jumlah: parseInt(jumlah), totalHarga: parseInt(totalHarga) })
+            });
+            loadPembelian();
+            bootstrap.Modal.getInstance(document.getElementById('addPembelianModal')).hide();
+        });
+
+        // Cancel pembelian
+        function cancelPembelian(id) {
+            if (confirm('Are you sure to cancel this pembelian?')) {
+                fetch(`/api/pembelian/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'cancel' })
+                }).then(() => loadPembelian());
+            }
+        }
+
+        loadProduk();
+        loadPembelian();
+    </script>
+</body>
+</html>

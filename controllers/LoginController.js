@@ -67,4 +67,21 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { login };
+const logout = async (req, res) => {
+  try {
+    // Untuk JWT, logout biasanya hanya mengirim response sukses
+    // Token akan invalid secara otomatis setelah expire
+    // Jika ingin blacklist token, bisa tambahkan logic di sini (misal simpan ke DB)
+    res.status(200).json({
+      success: true,
+      message: "Logout successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+module.exports = { login, logout };

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Stock - XIONCO</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand" href="/admin/dashboard">XIONCO Admin</a>
+        <div class="navbar-nav ms-auto">
+          <a class="nav-link" href="/admin/dashboard">Dashboard</a>
+          <a class="nav-link" href="/admin/produk">Produk</a>
+          <a class="nav-link" href="/admin/pembelian">Pembelian</a>
+          <a class="nav-link" href="/logout">Logout</a>
+        </div>
+      </div>
+    </nav>
+    <div class="container mt-4">
+      <h1>Manage Stock</h1>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Produk</th>
+            <th>Jumlah</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="stockTable">
+        </tbody>
+      </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      async function loadStock() {
+        try {
+          const response = await fetch("/api/stock");
+          const result = await response.json();
+
+          if (!result.success) {
+            alert(result.message);
+            return;
+          }
+
+          const stockArray = result.data; 
+          const table = document.getElementById("stockTable");
+          table.innerHTML = stockArray
+            .map(
+              (s) => `
+                <tr>
+                    <td>${s.id}</td>
+                    <td>${s.produk?.nama || "-"}</td>
+                    <td>${s.jumlah}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="updateStock(${
+                          s.id
+                        }, ${s.jumlah})">Update</button>
+                    </td>
+                </tr>
+            `
+            )
+            .join("");
+        } catch (err) {
+          console.error(err);
+          alert("Terjadi kesalahan saat memuat stock");
+        }
+      }
+
+      function updateStock(id, current) {
+        const newJumlah = prompt("Enter new jumlah:", current);
+        if (newJumlah) {
+          fetch(`/api/stock/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ jumlah: parseInt(newJumlah) }),
+          }).then(() => loadStock());
+        }
+      }
+
+      loadStock();
+    </script>
+  </body>
+</html>
