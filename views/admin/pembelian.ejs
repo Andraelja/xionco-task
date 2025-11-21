@@ -116,7 +116,6 @@
         }
       }
 
-      // Load tabel pembelian
       async function loadPembelian() {
         try {
           const result = await api("/api/pembelian");
@@ -126,21 +125,27 @@
           table.innerHTML = pembelian
             .map(
               (p) => `
-            <tr>
-                <td>${p.id}</td>
-                <td>${p.produk?.nama || "-"}</td>
-                <td>${p.jumlah}</td>
-                <td>${p.totalHarga}</td>
-                <td>${p.status}</td>
-                <td>
-                    ${
-                      p.status === "berhasil"
-                        ? `<button class="btn btn-danger btn-sm" onclick="cancelPembelian(${p.id})">Cancel</button>`
-                        : ""
-                    }
-                </td>
-            </tr>
-        `
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.produk?.nama || "-"}</td>
+            <td>${p.jumlah}</td>
+            <td>${p.totalHarga}</td>
+            <td>
+                ${
+                  p.status === "cancel"
+                    ? `<span class="badge bg-danger">Canceled</span>`
+                    : `<span class="badge bg-success">Berhasil</span>`
+                }
+            </td>
+            <td>
+                ${
+                  p.status === "berhasil"
+                    ? `<button class="btn btn-danger btn-sm" onclick="cancelPembelian(${p.id})">Cancel</button>`
+                    : `<span class="text-muted">-</span>`
+                }
+            </td>
+        </tr>
+    `
             )
             .join("");
         } catch (err) {

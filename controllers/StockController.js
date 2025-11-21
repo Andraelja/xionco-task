@@ -3,77 +3,70 @@ const asyncHandler = require("../utils/validators/asyncHandler");
 const { success, error } = require("../utils/validators/response");
 
 const getStock = asyncHandler(async (req, res) => {
-    const stock = await prisma.stockProduk.findMany({
-        select: { id: true, produkId: true, jumlah: true },
-        orderBy: { id: "asc" }
-    });
-    return success(res, "Berhasil mengambil data!", stock);
+  const stock = await prisma.stockProduk.findMany({
+    include: { produk: true },
+    orderBy: { id: "asc" }
+  });
+
+  return success(res, "Berhasil mengambil data!", stock);
 });
 
 const createStock = asyncHandler(async (req, res) => {
-    const { produkId, jumlah } = req.body;
+  const { produkId, jumlah } = req.body;
 
-    if(!produkId || !jumlah) {
-        return error(res, "Produk dan jumlah wajib diisi!", 400)
-    }
+  if (!produkId || !jumlah) {
+    return error(res, "Produk dan jumlah wajib diisi!", 400);
+  }
 
-    const produk = await prisma.produk.findUnique({
-        where: { id: Number(produkId) }
-    });
+  const produk = await prisma.produk.findUnique({
+    where: { id: Number(produkId) },
+  });
 
-    if(!produk) {
-        return error(res, "Produk tidak ditemukan!", 404)
-    }
+  if (!produk) {
+    return error(res, "Produk tidak ditemukan!", 404);
+  }
 
-    const stock = await prisma.stockProduk.create({
-        data: { produkId: Number(produkId), jumlah: Number(jumlah) },
-        include: { produk: true }
-    });
+  const stock = await prisma.stockProduk.create({
+    data: { produkId: Number(produkId), jumlah: Number(jumlah) },
+    include: { produk: true },
+  });
 
-    return success(res, "Berhasil menambahkan stok!", stock, 201)
+  return success(res, "Berhasil menambahkan stok!", stock, 201);
 });
 
 const findStockById = asyncHandler(async (req, res) => {
-    const { id } = req.params
-    const stock = await prisma.stockProduk.findUnique({
-        where: { id: Number(id) },
-        include: { produk: true }
-    });
+  const { id } = req.params;
+  const stock = await prisma.stockProduk.findUnique({
+    where: { id: Number(id) },
+    include: { produk: true },
+  });
 
-    if(!stock) return error(res, "Stok tidak ditemukan!", 404);
+  if (!stock) return error(res, "Stok tidak ditemukan!", 404);
 
-    return success(res, "Berhasil mengambil data!", stock, 200);
+  return success(res, "Berhasil mengambil data!", stock, 200);
 });
 
 const updateStock = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const { produkId, jumlah } = req.body;
+  const { id } = req.params;
+  const { jumlah } = req.body;
 
-    if(!produkId || !jumlah) {
-        return error(res, "Produk dan jumlah wajib diisi!", 400)
-    }
+  if (!jumlah && jumlah !== 0) {
+    return error(res, "Jumlah wajib diisi!", 400);
+  }
 
-    const produk = await prisma.produk.findUnique({
-        where: { id: Number(produkId) }
-    });
+  const cek = await prisma.stockProduk.findUnique({
+    where: { id: Number(id) },
+  });
 
-    if(!produk) {
-        return error(res, "Produk tidak ditemukan!", 404)
-    }
+  if (!cek) return error(res, "Stok tidak ditemukan!", 404);
 
-    const cek = await prisma.stockProduk.findUnique({
-        where: { id: Number(id) }
-    });
+  const stock = await prisma.stockProduk.update({
+    where: { id: Number(id) },
+    data: { jumlah: Number(jumlah) },
+    include: { produk: true },
+  });
 
-    if(!cek) return error(res, "Stok tidak ditemukan!", 404);
-
-    const stock = await prisma.stockProduk.update({
-        where: { id: Number(id) },
-        data: { produkId: Number(produkId), jumlah: Number(jumlah) },
-        include: { produk: true }
-    });
-
-    return success(res, "Berhasil mengupdate data", stock, 200);
+  return success(res, "Berhasil mengupdate data", stock, 200);
 });
 
 const deleteStock = asyncHandler(async (req, res) => {
@@ -97,5 +90,5 @@ module.exports = {
   createStock,
   findStockById,
   updateStock,
-  deleteStock
+  deleteStock,
 };

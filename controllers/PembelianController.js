@@ -4,15 +4,10 @@ const { success, error } = require("../utils/validators/response");
 
 const getPembelian = asyncHandler(async (req, res) => {
   const pembelian = await prisma.pembelian.findMany({
-    select: {
-      id: true,
-      produkId: true,
-      jumlah: true,
-      totalHarga: true,
-      status: true,
-    },
+    include: { produk: true },
     orderBy: { id: "asc" },
   });
+
   return success(res, "Berhasil mengambil data!", pembelian);
 });
 
@@ -71,72 +66,27 @@ const findPembelianById = asyncHandler(async (req, res) => {
 });
 
 const updatePembelian = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { produkId, jumlah } = req.body;
+  const { produkId, jumlah, status } = req.body;
+
+  if (status) {
+    const pembelian = await prisma.pembelian.update({
+      where: { id: Number(req.params.id) },
+      data: { status },
+    });
+
+    return success(res, "Status pembelian berhasil diupdate!", pembelian);
+  }
 
   if (!produkId || !jumlah) {
     return error(res, "Produk dan jumlah wajib diisi!", 400);
   }
 
-  const pembelianLama = await prisma.pembelian.findUnique({
-    where: { id: Number(id) },
+  const pembelian = await prisma.pembelian.update({
+    where: { id: Number(req.params.id) },
+    data: { produkId, jumlah },
   });
 
-  if (!pembelianLama) {
-    return error(res, "Pembelian tidak ditemukan!", 404);
-  }
-
-  const stokLama = await prisma.stockProduk.findUnique({
-    where: { produkId: pembelianLama.produkId },
-  });
-
-  if (!stokLama) {
-    return error(res, "Stok lama tidak ditemukan!", 404);
-  }
-
-  await prisma.stockProduk.update({
-    where: { produkId: pembelianLama.produkId },
-    data: { jumlah: stokLama.jumlah + pembelianLama.jumlah },
-  });
-
-  const produkBaru = await prisma.produk.findUnique({
-    where: { id: Number(produkId) },
-  });
-
-  if (!produkBaru) {
-    return error(res, "Produk baru tidak ditemukan!", 404);
-  }
-
-  const stokBaru = await prisma.stockProduk.findUnique({
-    where: { produkId: Number(produkId) },
-  });
-
-  if (!stokBaru) {
-    return error(res, "Stok produk baru tidak ditemukan!", 404);
-  }
-
-  if (stokBaru.jumlah < jumlah) {
-    return error(res, "Stok baru tidak mencukupi!", 400);
-  }
-
-  const totalHargaBaru = produkBaru.harga * jumlah;
-
-  const pembelianUpdate = await prisma.pembelian.update({
-    where: { id: Number(id) },
-    data: {
-      produkId: Number(produkId),
-      jumlah: Number(jumlah),
-      totalHarga: Number(totalHargaBaru),
-    },
-    include: { produk: true },
-  });
-
-  await prisma.stockProduk.update({
-    where: { produkId: Number(produkId) },
-    data: { jumlah: stokBaru.jumlah - jumlah },
-  });
-
-  return success(res, "Pembelian berhasil diperbarui!", pembelianUpdate, 200);
+  return success(res, "Pembelian berhasil diupdate!", pembelian);
 });
 
 const deletePembelian = asyncHandler(async (req, res) => {
