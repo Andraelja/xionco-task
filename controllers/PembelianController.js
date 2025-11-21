@@ -11,7 +11,7 @@ const getPembelian = asyncHandler(async (req, res) => {
       totalHarga: true,
       status: true,
     },
-    orderBy: { id: "desc" },
+    orderBy: { id: "asc" },
   });
   return success(res, "Berhasil mengambil data!", pembelian);
 });

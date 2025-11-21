@@ -5,7 +5,7 @@ const { success, error } = require("../utils/validators/response");
 const getStock = asyncHandler(async (req, res) => {
     const stock = await prisma.stockProduk.findMany({
         select: { id: true, produkId: true, jumlah: true },
-        orderBy: { id: "desc" }
+        orderBy: { id: "asc" }
     });
     return success(res, "Berhasil mengambil data!", stock);
 });
